@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="validatingJson" format="json">
+      <types:shape format="weave" example="examples/new.json"><![CDATA[%dw 2.0
+
+type validatingJson = {|
+  std_id: Number {"typeId": "int"}, 
+  name: String, 
+  age: Number {"typeId": "int"}, 
+  gender: String, 
+  doj: String, 
+  city: String
+|} {"example": "{\\\"std_id\\\":100,\\\"name\\\":\\\"ranjith\\\",\\\"age\\\":20,\\\"gender\\\":\\\"M\\\",\\\"doj\\\":\\\"1994-08-19\\\",\\\"city\\\":\\\"vki\\\"}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+</types:mule>

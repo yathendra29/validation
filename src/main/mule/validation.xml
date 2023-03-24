@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="dcdd8df5-d3a7-49e6-b940-4b3c90b4f8b2" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="f7006ac7-5183-4e69-93f9-48a97fc41e34" />
+	<flow name="validationFlow" doc:id="7bcb6ab0-42da-46ce-8dce-0b91143fc65a" >
+		<http:listener doc:name="Listener" doc:id="d17215e3-e4c9-41db-898a-22509b9466a2" config-ref="HTTP_Listener_config" path="/validateJson"/>
+		<logger level="INFO" doc:name="Logger" doc:id="6da30fc9-96d0-4be4-96f1-49aa35e6067b" message="#[payload]"/>
+		<json:validate-schema doc:name="Validate schema" doc:id="82ca5167-cf30-4775-9288-7aa883857098" schema="sampleSchema.json"/>
+		<logger level="INFO" doc:name="Logger" doc:id="4e075c12-cffe-4c4a-98ec-e80fc7e4a704" message="after validation #[payload]"/>
+	</flow>
+	<flow name="validation_is_email" doc:id="bbffdaed-3466-429a-848e-8e298368fc9c" >
+		<http:listener doc:name="Listener" doc:id="d7304903-3545-42d2-a70a-b382bed8a9d4" config-ref="HTTP_Listener_config" path="/email"/>
+		<validation:is-email doc:name="Is email" doc:id="bb602c11-cc89-4739-ab72-e52e95c2e14f" config-ref="Validation_Config" email="#[payload.email]"/>
+	</flow>
+	<flow name="validation_IsUrl" doc:id="c8e3f881-9df1-43fb-8ef5-49022bb81bbc" >
+		<http:listener doc:name="Listener" doc:id="28eb22da-5a5d-4777-9499-53549f2aa608" config-ref="HTTP_Listener_config" path="/url"/>
+		<validation:is-url doc:name="Is URL" doc:id="696f2419-cc92-446d-8c0e-d87fb065c6d1" config-ref="Validation_Config" url="#[payload.url]" message="entered url is Invalid"/>
+		<ee:transform doc:name="Transform Message" doc:id="f51fe43a-fbc9-4b47-bbc4-b6bc5f280811" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ++ {"Status":"It is a valid url"}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="input payload" doc:id="c60a750b-dbb7-4580-aa7d-5842b790dfa8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"std_id":100,
+	"name":"ranjith",
+	"age":20,
+	"gender":"M",
+	"doj":"1994-08-19",
+	"city":"vki"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="validation_is_IP" doc:id="2d7df705-1b19-4845-8bb5-30b77ec329f5" >
+		<http:listener doc:name="Listener" doc:id="1e3f0c49-7fc2-4e34-ad2b-690e1cd0c732" config-ref="HTTP_Listener_config" path="/ip"/>
+		<validation:is-ip doc:name="Is IP ( It validates both ipv4 and ipv6)" doc:id="5d083778-b15c-4d75-b9e0-73b23e7732f3" config-ref="Validation_Config" ip="#[payload.ip]" message="Ip address is Invalid"/>
+	</flow>
+	<flow name="validation_is_empty_collection" doc:id="266aa8dd-788b-4505-95ba-3a03acdd481f" >
+		<http:listener doc:name="Listener" doc:id="a64315e0-ab4c-484f-bcf3-a9dd429ff23a" config-ref="HTTP_Listener_config" path="/col"/>
+		<validation:is-empty-collection doc:name="Is empty collection" doc:id="2e1c4bd7-9987-424b-b5d5-27389b752715" config-ref="Validation_Config" values="#[payload.collection]"/>
+	</flow>
+	<flow name="validation_is_number" doc:id="a6f36bc3-dec5-4ea9-8a00-49a49d537123" >
+		<http:listener doc:name="Listener" doc:id="8c668c25-82b2-4b4e-9b72-af3af64e95bf" config-ref="HTTP_Listener_config" path="/num"/>
+		<validation:is-number numberType="INTEGER" doc:name="Is number" doc:id="776e2177-020e-457b-8910-52f9db10d258" config-ref="Validation_Config" value="#[payload.number]" minValue="20" maxValue="100"/>
+	</flow>
+	<flow name="validation_is_time" doc:id="cbc4055e-099a-46ad-aff7-b7362ed9c42b" >
+		<http:listener doc:name="Listener" doc:id="fd582108-1a2e-4ec9-8e64-b202352386ff" config-ref="HTTP_Listener_config" path="/time"/>
+		<validation:is-time doc:name="Is time" doc:id="f150b2a7-022a-47df-8fd8-1bb8b914fe41" config-ref="Validation_Config" time="#[payload.time]" pattern="HH:mm:ss"/>
+	</flow>
+	<flow name="validation_Allowed_ip" doc:id="d7c9405e-36d7-4da0-876d-e69b001b9dce" >
+		<http:listener doc:name="Listener" doc:id="dabdd3ac-6e0f-4182-820a-60443eadb3a7" config-ref="HTTP_Listener_config" path="/aip"/>
+		<validation:is-allowed-ip doc:name="Is allowed ip" doc:id="9afb1e29-c260-4f73-b2a9-d9e09175130b" config-ref="Validation_Config" ipAddress="#[payload.ip]">
+			<validation:allow-list ips='#[["10.0.0.0","10.0.0.1"]]' />
+		</validation:is-allowed-ip>
+	</flow>
+	<flow name="validation_size" doc:id="1063a820-92f4-424c-ba4f-76ea220f5e68" >
+		<http:listener doc:name="Listener" doc:id="a7866873-3e91-49fe-97fb-01afd5a74263" config-ref="HTTP_Listener_config" path="/size"/>
+		<validation:validate-size doc:name="Validate size" doc:id="e890fbf9-e39d-4069-9289-0021d03ed77a" config-ref="Validation_Config" value="#[payload.msg]" min="2" max="10"/>
+	</flow>
+	<flow name="validation_SCOPE_All" doc:id="544504d5-615b-4e0f-bb7e-75a89eafd564" >
+		<http:listener doc:name="Listener" doc:id="da45f9a7-f038-4155-ad6e-0fab439778d7" config-ref="HTTP_Listener_config" path="/all"/>
+		<validation:all doc:name="All" doc:id="e048466e-2b5f-4c3a-b5ac-03ab6da6c672" >
+			<validation:is-not-blank-string doc:name="Is not blank string" doc:id="b3e4c291-20b8-464c-a07a-78f7e95437d6" config-ref="Validation_Config" value="#[payload.msg]"/>
+			<validation:is-not-null doc:name="Is not null" doc:id="cdd822fd-82fa-41b5-a045-0d73f80c32e4" config-ref="Validation_Config" value="#[payload.msg]"/>
+		</validation:all>
+		<logger level="INFO" doc:name="Logger" doc:id="0e4d110c-3345-44c0-9ca7-557f24476351" message="all operation is completed"/>
+	</flow>
+	<flow name="validation_any" doc:id="a152ab85-7929-47ea-9dff-1abe86c3a7b1" >
+		<http:listener doc:name="Listener" doc:id="690c021f-b187-4696-af19-249d6aef08e9" config-ref="HTTP_Listener_config" path="/any"/>
+		<validation:any doc:name="Any" doc:id="270f28ba-6930-42ae-9df6-aee9e5d24a31" >
+			<validation:is-null doc:name="Is null" doc:id="b33c94e7-05ef-4b1b-b667-42a0b77a28bd" config-ref="Validation_Config" value="#[payload.age]"/>
+			<validation:is-true doc:name="Is true" doc:id="c72241b8-89e1-44d2-8303-efd72e1f9949" config-ref="Validation_Config" expression="#[payload.age &gt; 20]"/>
+		</validation:any>
+		<logger level="INFO" doc:name="Logger" doc:id="972bbcf9-c6bf-4a8f-b94b-2459f68f3b6b" message="any operation executed"/>
+	</flow>
+</mule>
